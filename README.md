@@ -264,40 +264,7 @@ cd pdfviewer-compose
 ./gradlew :pdfviewer-sdk:publishToMavenLocal  # try the artifact in another local project via mavenLocal()
 ```
 
----
 
-## Releasing (maintainers)
-
-Publishing uses the [Gradle Maven Publish plugin](https://vanniktech.github.io/gradle-maven-publish-plugin/) and the [Sonatype Central Portal](https://central.sonatype.com).
-
-**One-time setup**
-
-1.  Sign in to [central.sonatype.com](https://central.sonatype.com) with GitHub. The `io.github.fmaestre98` namespace is verified automatically.
-2.  Generate a user token in *Account → Generate User Token*.
-3.  Create a GPG key and publish it:
-    ```bash
-    gpg --full-generate-key
-    gpg --keyserver keyserver.ubuntu.com --send-keys <KEY_ID>
-    ```
-
-**Every release**
-
-1.  Update `VERSION_NAME` in [`gradle.properties`](gradle.properties) and add an entry to [`CHANGELOG.md`](CHANGELOG.md).
-2.  Export the credentials (never commit them):
-    ```bash
-    export ORG_GRADLE_PROJECT_mavenCentralUsername=<token username>
-    export ORG_GRADLE_PROJECT_mavenCentralPassword=<token password>
-    export ORG_GRADLE_PROJECT_signingInMemoryKey="$(gpg --export-secret-keys --armor <KEY_ID>)"
-    export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=<key passphrase>
-    ```
-3.  Publish and tag:
-    ```bash
-    ./gradlew :pdfviewer-sdk:publishAndReleaseToMavenCentral
-    git tag v1.0.0 && git push origin v1.0.0
-    ```
-4.  Create a GitHub release from the tag with the changelog notes. The artifact usually appears on Maven Central within 30 minutes.
-
----
 
 ## License
 
