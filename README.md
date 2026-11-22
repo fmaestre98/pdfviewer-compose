@@ -1,157 +1,50 @@
-# PdfViewer
+# PDF Viewer Compose
 
-A modern, visually immersive, and feature-rich Android PDF Reader application built with Jetpack Compose. Instead of a standard file list, it features a warm, realistic **Bookshelf Interface** to display your PDF library and comes packed with tools to annotate, highlight, bookmark, and read documents seamlessly.
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.fmaestre98/pdfviewer-compose)](https://central.sonatype.com/artifact/io.github.fmaestre98/pdfviewer-compose)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![API](https://img.shields.io/badge/API-24%2B-brightgreen.svg)](https://android-arsenal.com/api?level=24)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4.svg)](https://developer.android.com/compose)
+
+A complete PDF reader for Android as a single Jetpack Compose function. Drop `PdfReaderView` into your app and get zoom, text selection (across pages), highlights, bookmarks, page notes, search, thumbnails and reading progress, all persisted out of the box.
+
+```kotlin
+PdfReaderView(source = PdfSource.FromUri(uri), onClose = onBack)
+```
 
 ---
 
 ## Screenshots
 
 <p align="center">
-  <img src="app/images/home.jpg" width="30%" />
-  <img src="app/images/index.jpg" width="30%" />
-  <img src="app/images/search.jpg" width="30%" />
+  <img src="sample/images/index.jpg" width="30%" />
+  <img src="sample/images/search.jpg" width="30%" />
+  <img src="sample/images/text selection.jpg" width="30%" />
 </p>
 <p align="center">
-  <img src="app/images/text selection.jpg" width="30%" />
-  <img src="app/images/highlights.jpg" width="30%" />
-  <img src="app/images/add note.jpg" width="30%" />
+  <img src="sample/images/highlights.jpg" width="30%" />
+  <img src="sample/images/add note.jpg" width="30%" />
+  <img src="sample/images/home.jpg" width="30%" />
 </p>
 
 ---
 
-##  Key Features
+## Features
 
-### 1. Interactive Bookshelf Library 
-*   **Visual Shelf Layout**: Books are displayed as colorful covers placed on a wooden shelf row.
-*   **Unique Customizations**: Covers have randomized colors and subtle tilt rotations to mimic a physical library.
-*   **Storage Access**: Easily import PDFs from local storage.
-
-### 2. Custom Interactive PDF Viewer 
-*   **Smooth Gesture Controls**: Support for pinch-to-zoom, pan, and double-tap zoom for readability.
-*   **Auto-Resume**: Remembers your exact position and resumes from the last read page for each document automatically.
-*   **Edge-to-Edge Experience**: Utilizes modern Android inset handling for immersive reading.
-
-### 3. Annotation & Study Tools 
-*   **Bookmarks**: Bookmark critical pages and access them via a quick toggle.
-*   **Sticky Page Notes**: Save, edit, and delete text notes attached to any specific page in the document.
-*   **Text Highlighting**: Highlight text snippets in various colors (coordinates and text snippets are stored in the local database).
-
-### 4. Visual Thumbnail Drawer 
-*   **Thumbnail Previews**: Open a sliding drawer to view page thumbnails, enabling rapid visual navigation through the document.
+*   **Rendering and gestures**: horizontal paging or continuous vertical scrolling, pinch-to-zoom, pan and double-tap zoom.
+*   **Text selection**: long press to select, drag handles (even across page boundaries), copy to the clipboard.
+*   **Highlights**: highlight the selection in several colors. Rectangles are stored normalized, so they render correctly at any zoom level or screen size.
+*   **Bookmarks and page notes**: bookmark pages and attach text notes to any page.
+*   **Search**: full-text search across the document.
+*   **Thumbnail drawer**: page previews for fast navigation.
+*   **Reading progress**: reopens every document on the last read page.
+*   **Pluggable persistence**: works with a built-in Room database, or with your own storage through the `PdfViewerStorage` interface.
+*   **No DI framework required**: works with or without Hilt/Koin.
 
 ---
 
-## Technology Stack
+## Installation
 
-The application leverages the latest modern Android development tools and best practices:
-
-*   **UI Framework**: [Jetpack Compose](https://developer.android.com/compose) (100% Declarative UI)
-*   **Modularization**: Reusable Android library module (`:pdfviewer-sdk`) published with `maven-publish`
-*   **Dependency Injection**: [Dagger Hilt](https://developer.android.com/training/dependency-injection/hilt-android) (app module only; the SDK is DI-agnostic)
-*   **Local Database**: [Room SQL Database](https://developer.android.com/training/data-storage/room) (Handles book metadata, bookmarks, highlights, and page notes)
-*   **PDF Rendering Engine**: [PdfBox-Android](https://github.com/TomRoush/PdfBox-Android) (For robust PDF parsing, text selection, and rendering)
-*   **Navigation**: [Jetpack Compose Navigation](https://developer.android.com/guide/navigation/navigation-principles)
-*   **Language**: [Kotlin](https://kotlinlang.org/)
-*   **Build System**: Gradle Kotlin DSL with Version Catalogs (`libs.versions.toml`)
-
----
-
-##  Architecture
-
-The project is split into two Gradle modules and follows **Clean Architecture** guidelines with the **MVI (Model-View-Intent)** presentation pattern:
-
-| Module | Type | Responsibility |
-| --- | --- | --- |
-| `:app` | Android application | Bookshelf library, global annotations screen, Hilt DI, and the app database (`app_database`). |
-| `:pdfviewer-sdk` | Android library | Everything that happens once a PDF is opened: rendering, gestures, zoom, text selection, highlights, bookmarks, page notes, search, thumbnails, TTS, and reading progress. |
-
-The app depends on the SDK (`implementation(project(":pdfviewer-sdk"))`). The SDK has no dependency on the app and no dependency on Hilt, so it can be dropped into any Compose app.
-
-### `:app` module
-
-```
-com.fmaestre98.pdfviewer
-│
-├── di/                   # Hilt modules (repositories + PdfViewerStorage binding)
-├── models/               # Domain models (e.g., Book)
-├── repository/           # Repository interfaces and implementations
-├── room/                 # Room database, entities, and DAOs (app_database)
-├── sdk/                  # AppPdfViewerStorage: bridges app_database to the SDK storage contract
-│
-└── ui/
-    ├── navigation/       # Navigation routes
-    ├── theme/            # Theme, color schemes, and typography
-    └── screens/
-        ├── home/         # Bookshelf screen (State, Action, Event, VM, Screen)
-        └── annotations/  # Annotations across all books
-```
-
-### `:pdfviewer-sdk` module
-
-```
-com.fmaestre98.pdfviewer.sdk
-│
-├── ui/
-│   ├── PdfReaderView.kt      # Public entry point (full reader screen)
-│   ├── annotations/          # Optional per-document annotations screen
-│   └── reader/               # Reader screen, ViewModel, and components (internal)
-├── model/                    # Public PdfSource, PdfViewerConfig, PdfViewerColors
-├── storage/                  # Public PdfViewerStorage contract + default Room implementation
-├── data/                     # Internal Room database used by the default storage
-└── core/                     # Internal engine: rendering, gestures, overlays, text extraction, search, TTS
-```
-
-Only the types needed by host apps are public. The rendering engine (`core`), the internal database (`data`), and the reader internals (`ui/reader`) are marked `internal`.
-
-### Data Flow (MVI)
-1.  **UI/Screens** emit **Actions** (e.g., `OnPageChanged`, `SavePageNote`) to the **ViewModel**.
-2.  The **ViewModel** processes the action, interacts with **Repositories** or the **`PdfViewerStorage`** contract, and updates the **State**.
-3.  The **UI** observes the **State** and recomposes reactively. One-time side effects (e.g., displaying Snackbars, navigation) are handled via an **Events** channel.
-
-### Persistence
-The reader never talks to a database directly. It goes through the `PdfViewerStorage` interface, which covers bookmarks, highlights, page notes, and the last read page:
-
-*   In this app, `AppPdfViewerStorage` implements the interface on top of `app_database`. Everything saved in the reader is visible in the app's Annotations screen, and books reopen on the last read page.
-*   Apps without their own database can use `RoomPdfViewerStorage`, a default implementation backed by an internal SDK database (`pdf_sdk_internal.db`).
-
----
-
-##  Reusing the PDF Viewer in Other Apps
-
-The `:pdfviewer-sdk` module provides the full reading experience of this app (all the features listed above, except the bookshelf library) as a single composable.
-
-### Requirements
-*   `minSdk` 24 or higher
-*   Jetpack Compose enabled in the host app
-*   A Material 3 theme around the composable (the SDK uses `MaterialTheme` colors and typography)
-
-### 1. Add the dependency
-
-**Option A: as a local module (same repository or a Git submodule)**
-
-Copy or link the `pdfviewer-sdk` folder into your project, then:
-
-```kotlin
-// settings.gradle.kts
-include(":pdfviewer-sdk")
-
-// app/build.gradle.kts
-dependencies {
-    implementation(project(":pdfviewer-sdk"))
-}
-```
-
-The SDK uses the version catalog aliases from `gradle/libs.versions.toml` (Compose BOM, Lifecycle, Room, KSP, PdfBox-Android). Make sure the host project declares the same aliases, plus the `android-library`, `kotlin-compose`, and `ksp` plugins.
-
-**Option B: as a Maven artifact**
-
-Publish the library from this repository:
-
-```bash
-./gradlew :pdfviewer-sdk:publishReleasePublicationToMavenLocal
-```
-
-Then consume it from any other project:
+The library is published on Maven Central:
 
 ```kotlin
 // settings.gradle.kts
@@ -159,21 +52,26 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        mavenLocal()
     }
 }
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.fmaestre98:pdfviewer-sdk:1.0.0")
+    implementation("io.github.fmaestre98:pdfviewer-compose:1.0.0")
 }
 ```
 
-To share it with a team, point the `publishing` block in [`pdfviewer-sdk/build.gradle.kts`](pdfviewer-sdk/build.gradle.kts) to a remote repository (for example GitHub Packages) instead of `mavenLocal()`.
+### Requirements
 
-### 2. Show the reader
+*   `minSdk` 24 or higher
+*   Jetpack Compose with a Material 3 theme around the reader (the SDK uses `MaterialTheme` colors and typography)
+*   Kotlin 2.2 recommended (the library is built with Kotlin 2.2.10 and Compose BOM 2024.09)
 
-The simplest integration uses the built-in storage, so no extra setup is needed:
+PDFBox is initialized by the SDK and R8/ProGuard rules are shipped with the AAR, so no extra setup is needed.
+
+---
+
+## Quick start
 
 ```kotlin
 import com.fmaestre98.pdfviewer.sdk.model.PdfSource
@@ -188,17 +86,19 @@ fun ReaderScreen(pdfUri: Uri, onBack: () -> Unit) {
 }
 ```
 
-PDFBox is initialized automatically by the SDK, so you do not need to call `PDFBoxResourceLoader.init` in your `Application` class.
+That is all. Highlights, bookmarks, notes and the last read page are saved in an internal SDK database (`pdf_sdk_internal.db`).
 
-### 3. Choose a PDF source
+### PDF sources
 
 | Source | Usage |
 | --- | --- |
-| `PdfSource.FromUri(uri)` | `content://` or `file://` URIs (e.g., from the system file picker or a share intent). Content URIs are cached once in the app cache directory. |
+| `PdfSource.FromUri(uri)` | `content://` or `file://` URIs, for example from the system file picker or a share intent. Content URIs are cached once in the app cache directory. |
 | `PdfSource.FromFile(file)` | A `File` already stored on the device. |
-| `PdfSource.FromAsset("docs/manual.pdf")` | A PDF bundled in the host app's `assets` folder. |
+| `PdfSource.FromAsset("docs/manual.pdf")` | A PDF bundled in your app's `assets` folder. |
 
-### 4. Configure the reader
+---
+
+## Configuration
 
 ```kotlin
 import com.fmaestre98.pdfviewer.sdk.core.model.PdfViewerOrientation
@@ -224,11 +124,13 @@ PdfReaderView(
 )
 ```
 
-`documentId` is the key used to store annotations and reading progress. By default it comes from the source (the URI string, the file's absolute path, or `asset://<path>`). Pass your own stable ID if the file location can change, for example a database primary key.
+`documentId` is the key used to store annotations and reading progress. By default it comes from the source (the URI string, the file's absolute path or `asset://<path>`). Pass your own stable ID if the file location can change, for example a database primary key.
 
-### 5. Use your own database (optional)
+---
 
-To keep bookmarks, highlights, notes, and reading progress in your app's database, implement `PdfViewerStorage` and pass it to the reader:
+## Using your own database (optional)
+
+To keep bookmarks, highlights, notes and reading progress in your app's database, implement `PdfViewerStorage` and pass it to the reader:
 
 ```kotlin
 class MyPdfViewerStorage(
@@ -270,9 +172,7 @@ PdfReaderView(
 )
 ```
 
-Highlight rectangles are stored in normalized coordinates (`0..1` relative to the page size), so they render correctly at any zoom level or screen size. [`AppPdfViewerStorage`](app/src/main/java/com/fmaestre98/pdfviewer/sdk/AppPdfViewerStorage.kt) is a complete reference implementation built with Hilt and Room.
-
-With Hilt, bind your implementation once and inject it where you show the reader:
+A highlight that spans several pages is saved as one `saveHighlight` call per page, all with the same `groupId`. With Hilt, bind your implementation once:
 
 ```kotlin
 @Binds
@@ -280,9 +180,13 @@ With Hilt, bind your implementation once and inject it where you show the reader
 abstract fun bindPdfViewerStorage(impl: MyPdfViewerStorage): PdfViewerStorage
 ```
 
-### 6. Per-document annotations screen (optional)
+[`AppPdfViewerStorage`](sample/src/main/java/com/fmaestre98/pdfviewer/sdk/AppPdfViewerStorage.kt) in the sample app is a complete reference implementation built with Hilt and Room.
 
-The SDK also includes a ready-made list of annotations for a single document:
+---
+
+## Per-document annotations screen (optional)
+
+The SDK includes a ready-made list of the annotations of one document:
 
 ```kotlin
 val viewModel: AnnotationsViewModel = viewModel(
@@ -298,45 +202,105 @@ AnnotationsScreen(
 
 Collect `viewModel.events` to handle `NavigateToReader(documentId, page)` and `NavigateBack`. The list updates live when the storage overrides `observeAnnotations`.
 
-### Public API summary
+---
+
+## Public API
 
 | Type | Package | Purpose |
 | --- | --- | --- |
 | `PdfReaderView` | `sdk.ui` | Full reader composable |
 | `PdfSource` | `sdk.model` | Where the PDF comes from |
-| `PdfViewerConfig`, `PdfViewerColors` | `sdk.model` | Feature flags, initial page/orientation, colors |
+| `PdfViewerConfig`, `PdfViewerColors` | `sdk.model` | Feature flags, initial page and orientation, colors |
 | `PdfViewerOrientation` | `sdk.core.model` | `Horizontal` (paged) or `Vertical` (continuous scroll) |
 | `PdfViewerStorage` | `sdk.storage` | Persistence contract |
 | `PdfHighlight`, `PdfPageNote`, `PdfBookmark`, `NormalizedRect`, `PdfDocumentAnnotations` | `sdk.storage` | Storage models |
 | `RoomPdfViewerStorage`, `rememberDefaultPdfViewerStorage()` | `sdk.storage` | Default storage |
 | `AnnotationsScreen`, `AnnotationsViewModel` | `sdk.ui.annotations` | Optional annotations list |
-| `PdfRendererManager` | `sdk.core.rendering` | Page bitmap rendering, used for cover thumbnails in this app |
+| `PdfRendererManager` | `sdk.core.rendering` | Page bitmap rendering, for example for cover thumbnails |
 
-All packages are relative to `com.fmaestre98.pdfviewer`.
+All packages are relative to `com.fmaestre98.pdfviewer`. Everything else is `internal`.
 
 ---
 
-##  Getting Started
+## Sample app
 
-### Prerequisites
-*   Android Studio Ladybug (or newer)
-*   JDK 17+
-*   Android SDK 35+
+The [`sample`](sample) module shows two integrations:
 
-### Build and Run
-1.  Clone the repository:
+*   **Minimal example** ([`MinimalSampleActivity`](sample/src/main/java/com/fmaestre98/pdfviewer/minimal/MinimalSampleActivity.kt)): a plain `ComponentActivity` with no dependency injection that opens a bundled PDF with the default storage. Open it from the play button in the home screen's top bar.
+*   **Full app**: a bookshelf library with Hilt, its own Room database (`AppPdfViewerStorage`) and a global annotations screen across all books.
+
+The sample depends on the library source (`implementation(project(":pdfviewer-sdk"))`), so it always runs the current code.
+
+---
+
+## Project structure
+
+```
+pdfviewer-compose/
+├── pdfviewer-sdk/          # The library (the only published artifact)
+│   └── com.fmaestre98.pdfviewer.sdk
+│       ├── ui/             # PdfReaderView, annotations screen, reader internals
+│       ├── model/          # PdfSource, PdfViewerConfig, PdfViewerColors
+│       ├── storage/        # PdfViewerStorage contract + default Room implementation
+│       ├── data/           # Internal Room database used by the default storage
+│       └── core/           # Internal engine: rendering, gestures, overlays, text, search
+├── sample/                 # Example app
+├── gradle/libs.versions.toml
+└── CHANGELOG.md
+```
+
+The reader follows the **MVI** pattern: the UI emits actions, the ViewModel talks to `PdfViewerStorage` and updates an immutable state, and one-time effects go through an events channel.
+
+---
+
+## Building locally
+
+Requirements: Android Studio (latest stable), JDK 17 and Android SDK 36.
+
+```bash
+git clone https://github.com/fmaestre98/pdfviewer-compose.git
+cd pdfviewer-compose
+./gradlew :sample:installDebug             # run the sample app
+./gradlew :pdfviewer-sdk:publishToMavenLocal  # try the artifact in another local project via mavenLocal()
+```
+
+---
+
+## Releasing (maintainers)
+
+Publishing uses the [Gradle Maven Publish plugin](https://vanniktech.github.io/gradle-maven-publish-plugin/) and the [Sonatype Central Portal](https://central.sonatype.com).
+
+**One-time setup**
+
+1.  Sign in to [central.sonatype.com](https://central.sonatype.com) with GitHub. The `io.github.fmaestre98` namespace is verified automatically.
+2.  Generate a user token in *Account → Generate User Token*.
+3.  Create a GPG key and publish it:
     ```bash
-    git clone https://github.com/fmaestre98/pdfViewer.git
-    cd pdfViewer
+    gpg --full-generate-key
+    gpg --keyserver keyserver.ubuntu.com --send-keys <KEY_ID>
     ```
-2.  Open the project in Android Studio.
-3.  Sync the project with Gradle files.
-4.  Run the application on an emulator or a physical device (Android 8.0+ / API 26+ recommended).
+
+**Every release**
+
+1.  Update `VERSION_NAME` in [`gradle.properties`](gradle.properties) and add an entry to [`CHANGELOG.md`](CHANGELOG.md).
+2.  Export the credentials (never commit them):
+    ```bash
+    export ORG_GRADLE_PROJECT_mavenCentralUsername=<token username>
+    export ORG_GRADLE_PROJECT_mavenCentralPassword=<token password>
+    export ORG_GRADLE_PROJECT_signingInMemoryKey="$(gpg --export-secret-keys --armor <KEY_ID>)"
+    export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=<key passphrase>
+    ```
+3.  Publish and tag:
+    ```bash
+    ./gradlew :pdfviewer-sdk:publishAndReleaseToMavenCentral
+    git tag v1.0.0 && git push origin v1.0.0
+    ```
+4.  Create a GitHub release from the tag with the changelog notes. The artifact usually appears on Maven Central within 30 minutes.
 
 ---
 
-##  License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 Copyright (c) 2026 Fabian Ortiz

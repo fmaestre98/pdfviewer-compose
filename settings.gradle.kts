@@ -22,7 +22,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PdfViewer"
-include(":app")
+rootProject.name = "pdfviewer-compose"
 include(":pdfviewer-sdk")
+include(":sample")
  

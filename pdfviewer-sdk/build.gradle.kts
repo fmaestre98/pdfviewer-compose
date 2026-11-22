@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
-    `maven-publish`
+    alias(libs.plugins.maven.publish)
 }
 
 android {
@@ -34,12 +34,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
     }
 }
 
@@ -73,15 +67,45 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                from(components["release"])
-                groupId = "com.fmaestre98"
-                artifactId = "pdfviewer-sdk"
-                version = "1.0.0"
+mavenPublishing {
+    coordinates(
+        groupId = "io.github.fmaestre98",
+        artifactId = "pdfviewer-compose",
+        version = providers.gradleProperty("VERSION_NAME").get()
+    )
+
+    publishToMavenCentral()
+    // Keys are only provided on release machines/CI, so publishToMavenLocal works unsigned.
+    if (providers.gradleProperty("signingInMemoryKey").isPresent) {
+        signAllPublications()
+    }
+
+    pom {
+        name.set("PDF Viewer Compose")
+        description.set(
+            "Jetpack Compose PDF viewer for Android with text selection, highlights, " +
+                "bookmarks, page notes, search and pluggable persistence."
+        )
+        inceptionYear.set("2026")
+        url.set("https://github.com/fmaestre98/pdfviewer-compose")
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
+                distribution.set("repo")
             }
+        }
+        developers {
+            developer {
+                id.set("fmaestre98")
+                name.set("Fabian Ortiz")
+                url.set("https://github.com/fmaestre98")
+            }
+        }
+        scm {
+            url.set("https://github.com/fmaestre98/pdfviewer-compose")
+            connection.set("scm:git:git://github.com/fmaestre98/pdfviewer-compose.git")
+            developerConnection.set("scm:git:ssh://git@github.com/fmaestre98/pdfviewer-compose.git")
         }
     }
 }

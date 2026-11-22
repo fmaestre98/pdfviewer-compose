@@ -48,6 +48,12 @@
                 <data android:mimeType="application/pdf" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".minimal.MinimalSampleActivity"
+            android:exported="false"
+            android:label="@string/minimal_sample_title"
+            android:theme="@style/Theme.PdfViewer" />
     </application>
 
 </manifest>

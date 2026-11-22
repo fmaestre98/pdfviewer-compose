@@ -4,19 +4,19 @@ import android.net.Uri
 import java.io.File
 
 /**
- * Representa las posibles fuentes desde donde se puede cargar un archivo PDF en el visor.
+ * Where the viewer loads a PDF document from.
  */
 sealed interface PdfSource {
-    /** Carga el PDF a partir de una URI de Android (content:// o file://) */
+    /** Android URI (`content://` or `file://`). */
     data class FromUri(val uri: Uri) : PdfSource
-    
-    /** Carga el PDF directamente desde un objeto File del sistema de archivos */
+
+    /** File on the device file system. */
     data class FromFile(val file: File) : PdfSource
-    
-    /** Carga el PDF desde la carpeta assets del proyecto */
+
+    /** File bundled in the host app's `assets` folder. */
     data class FromAsset(val assetPath: String) : PdfSource
 
-    /** Obtiene un identificador en String único para gestionar las anotaciones de este documento */
+    /** Stable identifier used to scope annotations, bookmarks and reading progress. */
     fun getDocumentId(): String = when (this) {
         is FromUri -> uri.toString()
         is FromFile -> file.absolutePath

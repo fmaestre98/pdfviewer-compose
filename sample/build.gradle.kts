@@ -14,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.fmaestre98.pdfviewer"
+        applicationId = "com.fmaestre98.pdfviewer.sample"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

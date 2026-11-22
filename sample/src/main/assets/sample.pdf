@@ -1,0 +1,193 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Length 2248 >>
+stream
+BT
+/F1 12 Tf
+16 TL
+72 720 Td
+(Page 1 of 3) Tj
+() '
+(PDF Viewer Compose is a Jetpack Compose library for reading PDF documents on) '
+(Android. This sample document is bundled with the example app so you can try) '
+(every feature without picking a file.) '
+() '
+(Long press any word to start a text selection. Drag the handles to extend it.) '
+(In vertical mode you can drag a handle past the bottom of a page and the) '
+(selection continues on the next page, so a single highlight can span several) '
+(pages.) '
+() '
+(Once a selection is active, use the floating menu to copy the text or to) '
+(highlight it with one of the available colors. Highlights are persisted) '
+(through the PdfViewerStorage interface. This minimal sample uses the default) '
+(Room implementation shipped with the SDK, so nothing has to be configured by) '
+(the host app.) '
+() '
+(Bookmarks, page notes and the last read page are stored the same way. Close) '
+(this screen and open it again: the viewer reopens on the page where you left) '
+(it and every annotation is restored.) '
+() '
+(Use the search button to find text across the whole document, the thumbnail) '
+(drawer to jump between pages, and the orientation toggle to switch between) '
+(horizontal paging and continuous vertical scrolling.) '
+() '
+(PDF Viewer Compose is a Jetpack Compose library for reading PDF documents on) '
+(Android. This sample document is bundled with the example app so you can try) '
+(every feature without picking a file.) '
+() '
+(Long press any word to start a text selection. Drag the handles to extend it.) '
+(In vertical mode you can drag a handle past the bottom of a page and the) '
+(selection continues on the next page, so a single highlight can span several) '
+(pages.) '
+() '
+(Once a selection is active, use the floating menu to copy the text or to) '
+(highlight it with one of the available colors. Highlights are persisted) '
+(through the PdfViewerStorage interface. This minimal sample uses the default) '
+(Room implementation shipped with the SDK, so nothing has to be configured by) '
+(the host app.) '
+() '
+(Bookmarks, page notes and the last read page are stored the same way. Close) '
+(this screen and open it again: the viewer reopens on the page where you left) '
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 2248 >>
+stream
+BT
+/F1 12 Tf
+16 TL
+72 720 Td
+(Page 2 of 3) Tj
+() '
+(PDF Viewer Compose is a Jetpack Compose library for reading PDF documents on) '
+(Android. This sample document is bundled with the example app so you can try) '
+(every feature without picking a file.) '
+() '
+(Long press any word to start a text selection. Drag the handles to extend it.) '
+(In vertical mode you can drag a handle past the bottom of a page and the) '
+(selection continues on the next page, so a single highlight can span several) '
+(pages.) '
+() '
+(Once a selection is active, use the floating menu to copy the text or to) '
+(highlight it with one of the available colors. Highlights are persisted) '
+(through the PdfViewerStorage interface. This minimal sample uses the default) '
+(Room implementation shipped with the SDK, so nothing has to be configured by) '
+(the host app.) '
+() '
+(Bookmarks, page notes and the last read page are stored the same way. Close) '
+(this screen and open it again: the viewer reopens on the page where you left) '
+(it and every annotation is restored.) '
+() '
+(Use the search button to find text across the whole document, the thumbnail) '
+(drawer to jump between pages, and the orientation toggle to switch between) '
+(horizontal paging and continuous vertical scrolling.) '
+() '
+(PDF Viewer Compose is a Jetpack Compose library for reading PDF documents on) '
+(Android. This sample document is bundled with the example app so you can try) '
+(every feature without picking a file.) '
+() '
+(Long press any word to start a text selection. Drag the handles to extend it.) '
+(In vertical mode you can drag a handle past the bottom of a page and the) '
+(selection continues on the next page, so a single highlight can span several) '
+(pages.) '
+() '
+(Once a selection is active, use the floating menu to copy the text or to) '
+(highlight it with one of the available colors. Highlights are persisted) '
+(through the PdfViewerStorage interface. This minimal sample uses the default) '
+(Room implementation shipped with the SDK, so nothing has to be configured by) '
+(the host app.) '
+() '
+(Bookmarks, page notes and the last read page are stored the same way. Close) '
+(this screen and open it again: the viewer reopens on the page where you left) '
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2248 >>
+stream
+BT
+/F1 12 Tf
+16 TL
+72 720 Td
+(Page 3 of 3) Tj
+() '
+(PDF Viewer Compose is a Jetpack Compose library for reading PDF documents on) '
+(Android. This sample document is bundled with the example app so you can try) '
+(every feature without picking a file.) '
+() '
+(Long press any word to start a text selection. Drag the handles to extend it.) '
+(In vertical mode you can drag a handle past the bottom of a page and the) '
+(selection continues on the next page, so a single highlight can span several) '
+(pages.) '
+() '
+(Once a selection is active, use the floating menu to copy the text or to) '
+(highlight it with one of the available colors. Highlights are persisted) '
+(through the PdfViewerStorage interface. This minimal sample uses the default) '
+(Room implementation shipped with the SDK, so nothing has to be configured by) '
+(the host app.) '
+() '
+(Bookmarks, page notes and the last read page are stored the same way. Close) '
+(this screen and open it again: the viewer reopens on the page where you left) '
+(it and every annotation is restored.) '
+() '
+(Use the search button to find text across the whole document, the thumbnail) '
+(drawer to jump between pages, and the orientation toggle to switch between) '
+(horizontal paging and continuous vertical scrolling.) '
+() '
+(PDF Viewer Compose is a Jetpack Compose library for reading PDF documents on) '
+(Android. This sample document is bundled with the example app so you can try) '
+(every feature without picking a file.) '
+() '
+(Long press any word to start a text selection. Drag the handles to extend it.) '
+(In vertical mode you can drag a handle past the bottom of a page and the) '
+(selection continues on the next page, so a single highlight can span several) '
+(pages.) '
+() '
+(Once a selection is active, use the floating menu to copy the text or to) '
+(highlight it with one of the available colors. Highlights are persisted) '
+(through the PdfViewerStorage interface. This minimal sample uses the default) '
+(Room implementation shipped with the SDK, so nothing has to be configured by) '
+(the host app.) '
+() '
+(Bookmarks, page notes and the last read page are stored the same way. Close) '
+(this screen and open it again: the viewer reopens on the page where you left) '
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000133 00000 n 
+0000000230 00000 n 
+0000002530 00000 n 
+0000002656 00000 n 
+0000004956 00000 n 
+0000005082 00000 n 
+0000007382 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7508
+%%EOF

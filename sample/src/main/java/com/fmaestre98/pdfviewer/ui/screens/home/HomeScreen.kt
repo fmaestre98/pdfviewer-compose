@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fmaestre98.pdfviewer.R
+import com.fmaestre98.pdfviewer.minimal.MinimalSampleActivity
 import com.fmaestre98.pdfviewer.models.Book
 import com.fmaestre98.pdfviewer.ui.util.ObserveAsEvents
 import com.fmaestre98.pdfviewer.sdk.core.rendering.PdfRendererManager
@@ -106,7 +108,10 @@ fun HomeRoot(
         onPickPdfClick = {
              launcher.launch(arrayOf("application/pdf"))
         },
-        onNavigateToAnnotations = onNavigateToAnnotations
+        onNavigateToAnnotations = onNavigateToAnnotations,
+        onOpenMinimalSample = {
+            context.startActivity(Intent(context, MinimalSampleActivity::class.java))
+        }
     )
 }
 
@@ -117,7 +122,8 @@ fun HomeScreen(
     snackbarHostState: SnackbarHostState,
     onAction: (HomeAction) -> Unit,
     onPickPdfClick: () -> Unit,
-    onNavigateToAnnotations: () -> Unit
+    onNavigateToAnnotations: () -> Unit,
+    onOpenMinimalSample: () -> Unit
 ) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -125,6 +131,13 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.home_title)) },
                 actions = {
+                    IconButton(onClick = onOpenMinimalSample) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = stringResource(R.string.minimal_sample_title),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                     IconButton(onClick = onNavigateToAnnotations) {
                         Icon(
                             painter = painterResource(R.drawable.ic_bookmarked),
