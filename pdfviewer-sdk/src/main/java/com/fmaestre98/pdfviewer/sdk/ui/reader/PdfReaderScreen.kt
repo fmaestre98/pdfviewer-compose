@@ -55,7 +55,6 @@ import com.fmaestre98.pdfviewer.sdk.core.rendering.PdfPageRenderer
 import com.fmaestre98.pdfviewer.sdk.core.ui.ComposePdfViewer
 import com.fmaestre98.pdfviewer.sdk.core.viewmodel.PdfViewerViewModel
 import com.fmaestre98.pdfviewer.sdk.model.PdfViewerColors
-import com.fmaestre98.pdfviewer.sdk.storage.NormalizedRect
 import com.fmaestre98.pdfviewer.sdk.ui.LocalPdfViewerColors
 import com.fmaestre98.pdfviewer.sdk.ui.reader.components.PageNoteBottomSheet
 import com.fmaestre98.pdfviewer.sdk.ui.reader.components.PdfSearchOverlay
@@ -182,70 +181,16 @@ private fun PdfReaderScreenContent(
                             },
                             enableTextExtraction = true,
                             viewModel = pdfViewerViewModel,
-                            onHighlightRequested = { color, page, snippet ->
-                                val startChar = interactiveState.selectionStartChar
-                                val endChar = interactiveState.selectionEndChar
-                                val pageIndex = interactiveState.selectionPageIndex
-                                val optimizedModel =
-                                    interactiveState.getOptimizedPageModel(pageIndex)
-                                val pageModel = interactiveState.getPageModel(pageIndex)
-
-                                if (startChar != null && endChar != null && optimizedModel != null && pageModel != null) {
-                                    val selectedChars =
-                                        optimizedModel.getCharactersBetween(startChar, endChar)
-                                    val pw = pageModel.targetWidth.toFloat()
-                                    val ph = pageModel.targetHeight.toFloat()
-
-                                    if (selectedChars.isNotEmpty() && pw > 0 && ph > 0) {
-                                        val normalizedRects = mutableListOf<NormalizedRect>()
-                                        var lineLeft = selectedChars[0].rect.left
-                                        var lineTop = selectedChars[0].rect.top
-                                        var lineRight = selectedChars[0].rect.right
-                                        var lineBottom = selectedChars[0].rect.bottom
-
-                                        for (i in 1 until selectedChars.size) {
-                                            val charRect = selectedChars[i].rect
-                                            val charCenterY = (charRect.top + charRect.bottom) / 2f
-                                            val lineCenterY = (lineTop + lineBottom) / 2f
-
-                                            if (kotlin.math.abs(charCenterY - lineCenterY) < 5f) {
-                                                lineLeft = minOf(lineLeft, charRect.left)
-                                                lineRight = maxOf(lineRight, charRect.right)
-                                                lineTop = minOf(lineTop, charRect.top)
-                                                lineBottom = maxOf(lineBottom, charRect.bottom)
-                                            } else {
-                                                normalizedRects.add(
-                                                    NormalizedRect(
-                                                        startX = lineLeft / pw,
-                                                        startY = lineTop / ph,
-                                                        endX = lineRight / pw,
-                                                        endY = lineBottom / ph
-                                                    )
-                                                )
-                                                lineLeft = charRect.left
-                                                lineTop = charRect.top
-                                                lineRight = charRect.right
-                                                lineBottom = charRect.bottom
-                                            }
-                                        }
-                                        normalizedRects.add(
-                                            NormalizedRect(
-                                                startX = lineLeft / pw,
-                                                startY = lineTop / ph,
-                                                endX = lineRight / pw,
-                                                endY = lineBottom / ph
-                                            )
+                            onHighlightRequested = { color, _, snippet ->
+                                val rectsByPage = buildSelectionHighlightRects(interactiveState)
+                                if (rectsByPage.isNotEmpty()) {
+                                    onAction(
+                                        PdfReaderAction.SaveHighlight(
+                                            color = color,
+                                            snippet = snippet,
+                                            rectsByPage = rectsByPage
                                         )
-
-                                        onAction(
-                                            PdfReaderAction.SaveHighlight(
-                                                color = color,
-                                                page = page,
-                                                snippet = snippet,
-                                                normalizedRects = normalizedRects
-                                            )
-                                        )
-                                    }
+                                    )
                                 }
                             },
                             onError = { }

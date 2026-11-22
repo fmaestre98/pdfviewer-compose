@@ -59,10 +59,10 @@ internal fun TextSelectionOverlay(
     val startCharCurrent = interactiveState.selectionStartChar
     val endCharCurrent = interactiveState.selectionEndChar
     if (startCharCurrent == null || endCharCurrent == null) return
-    val pageModel = interactiveState.getPageModel(interactiveState.selectionPageIndex) ?: return
+    if (!interactiveState.isSelectionActiveOnPage(pageIndex)) return
 
-    // Get optimized model for efficient lookups and drawing
-    val optimizedModel = interactiveState.getOptimizedPageModel(interactiveState.selectionPageIndex)
+    val pageModel = interactiveState.getPageModel(pageIndex) ?: return
+    val optimizedModel = interactiveState.getOptimizedPageModel(pageIndex)
 
     val density = LocalDensity.current
 
@@ -76,14 +76,17 @@ internal fun TextSelectionOverlay(
     // Painter instance
     val selectionPainter = remember { SelectionPainter() }
 
+    val startPage = interactiveState.selectionStartPageIndex
+    val endPage = interactiveState.selectionEndPageIndex
+    val showStartHandle = (startPage == pageIndex)
+    val showEndHandle = (endPage == pageIndex)
+
     // ── Magnifier bitmap ────────────────────────────────────────────────────
-    // We load the already-cached bitmap from the renderer when a handle drag starts.
     var magnifierBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
     LaunchedEffect(pageRenderer, pageIndex, optimalPageSize) {
         if (pageRenderer != null && optimalPageSize != null) {
             val (w, h) = optimalPageSize
-            // renderPage hit the internal cache on subsequent calls, so this is fast.
             val originalSize = pageRenderer.getPageSize(pageIndex)
             if (originalSize != null) {
                 val (origW, origH) = originalSize
@@ -117,7 +120,6 @@ internal fun TextSelectionOverlay(
         )
     }
 
-    // Helper to compare order between chars
     fun compareChars(a: PdfChar, b: PdfChar): Int {
         val lineCmp = a.lineId.compareTo(b.lineId)
         if (lineCmp != 0) return lineCmp
@@ -126,34 +128,58 @@ internal fun TextSelectionOverlay(
         return a.id.compareTo(b.id)
     }
 
+    // Determine characters for this page's highlight
+    val pageFirstChar = optimizedModel?.firstChar ?: pageModel.coordinates.firstOrNull()?.words?.firstOrNull()?.characters?.firstOrNull()
+    val pageLastChar = optimizedModel?.lastChar ?: pageModel.coordinates.lastOrNull()?.words?.lastOrNull()?.characters?.lastOrNull()
+
+    val (drawStartChar, drawEndChar) = remember(startCharCurrent, endCharCurrent, startPage, endPage, pageIndex, pageFirstChar, pageLastChar) {
+        if (startPage == endPage) {
+            startCharCurrent to endCharCurrent
+        } else if (startPage < endPage) {
+            when (pageIndex) {
+                startPage -> startCharCurrent to pageLastChar
+                endPage -> pageFirstChar to endCharCurrent
+                else -> pageFirstChar to pageLastChar
+            }
+        } else {
+            when (pageIndex) {
+                startPage -> pageFirstChar to startCharCurrent
+                endPage -> endCharCurrent to pageLastChar
+                else -> pageFirstChar to pageLastChar
+            }
+        }
+    }
+
     // ── Handle visual positions (anchored to character bounds) ──────────────
     var snappedStart by remember { mutableStateOf(Offset.Zero) }
     var snappedEnd   by remember { mutableStateOf(Offset.Zero) }
 
-    // Virtual drag positions (accumulates deltas)
     var dragPositionStart by remember { mutableStateOf(Offset.Zero) }
     var dragPositionEnd   by remember { mutableStateOf(Offset.Zero) }
 
-    // Which handle is currently dragged
     var draggingHandle by remember { mutableStateOf(HandleType.NONE) }
 
-    // Sync visual positions when chars or overlay size changes
-    LaunchedEffect(startCharCurrent, endCharCurrent, overlaySize) {
+    LaunchedEffect(startCharCurrent, endCharCurrent, overlaySize, showStartHandle, showEndHandle) {
         val w = overlaySize.width.toFloat()
         val h = overlaySize.height.toFloat()
         if (w <= 0f || h <= 0f) return@LaunchedEffect
 
-        val startRect = pdfRectToScreen(startCharCurrent.rect, w, h)
-        snappedStart = startRect.bottomLeft
+        if (showStartHandle) {
+            val startRect = pdfRectToScreen(startCharCurrent.rect, w, h)
+            snappedStart = startRect.bottomLeft
+            if (draggingHandle != HandleType.START) dragPositionStart = snappedStart
+        } else {
+            snappedStart = Offset.Zero
+        }
 
-        val endRect = pdfRectToScreen(endCharCurrent.rect, w, h)
-        snappedEnd = endRect.bottomRight
-
-        if (draggingHandle != HandleType.START) dragPositionStart = snappedStart
-        if (draggingHandle != HandleType.END)   dragPositionEnd   = snappedEnd
+        if (showEndHandle) {
+            val endRect = pdfRectToScreen(endCharCurrent.rect, w, h)
+            snappedEnd = endRect.bottomRight
+            if (draggingHandle != HandleType.END) dragPositionEnd = snappedEnd
+        } else {
+            snappedEnd = Offset.Zero
+        }
     }
-
-    val selectionHighlightColor = LocalPdfViewerColors.current.selectionHighlight
 
     Box(modifier = modifier) {
         // ── Highlight canvas ────────────────────────────────────────────────
@@ -164,141 +190,122 @@ internal fun TextSelectionOverlay(
                 overlaySize = IntSize(w.toInt(), h.toInt())
             }
 
-            if (optimizedModel != null) {
-                val start = interactiveState.selectionStartChar
-                val end   = interactiveState.selectionEndChar
-                if (start != null && end != null) {
-                    val (minChar, maxChar) =
-                        if (compareChars(start, end) <= 0) start to end else end to start
-                    selectionPainter.drawSelection(
-                        canvas             = drawContext.canvas,
-                        startChar          = minChar,
-                        endChar            = maxChar,
-                        optimizedPageModel = optimizedModel,
-                        pageWidth          = pageWidth,
-                        pageHeight         = pageHeight,
-                        overlaySize        = size
-                    )
-                }
-            } else {
-                // Fallback (should be rare)
-                val allChars = mutableListOf<PdfChar>()
-                pageModel.coordinates.forEach { line ->
-                    line.words.forEach { word ->
-                        word.characters.forEach { ch -> allChars.add(ch) }
-                    }
-                }
-                val sChar = interactiveState.selectionStartChar
-                val eChar = interactiveState.selectionEndChar
-                if (sChar != null && eChar != null) {
-                    val startIndex = allChars.indexOf(sChar)
-                    val endIndex   = allChars.indexOf(eChar)
-                    if (startIndex >= 0 && endIndex >= 0) {
-                        val low  = min(startIndex, endIndex)
-                        val high = max(startIndex, endIndex)
-                        for (i in low..high) {
-                            val ch   = allChars[i]
-                            val rect = pdfRectToScreen(ch.rect, w, h)
-                            drawRect(
-                                color   = selectionHighlightColor,
-                                topLeft = rect.topLeft,
-                                size    = rect.size
-                            )
-                        }
-                    }
-                }
+            if (optimizedModel != null && drawStartChar != null && drawEndChar != null) {
+                val (minChar, maxChar) =
+                    if (compareChars(drawStartChar, drawEndChar) <= 0) drawStartChar to drawEndChar else drawEndChar to drawStartChar
+                selectionPainter.drawSelection(
+                    canvas             = drawContext.canvas,
+                    startChar          = minChar,
+                    endChar            = maxChar,
+                    optimizedPageModel = optimizedModel,
+                    pageWidth          = pageWidth,
+                    pageHeight         = pageHeight,
+                    overlaySize        = size
+                )
             }
         }
 
         // ── Selection Handles ───────────────────────────────────────────────
-        if (snappedStart != Offset.Zero) {
-            SelectionHandleTeardrop(
-                isStart = true,
-                position = snappedStart,
-                touchSize = touchTargetDp / scaleFactor,
-                visualSize = visualHandleSize / scaleFactor,
-                onDragStart = {
-                    interactiveState.isDraggingHandle = true
-                    draggingHandle = HandleType.START
-                    gestureHandler.notifyHandleDragStarted()
-                    dragPositionStart = snappedStart
-                },
-                onDragDelta = { delta ->
-                    // positionChange() already accounts for ancestor graphicsLayer
-                    // transforms — no need to divide by scaleFactor.
-                    dragPositionStart += delta
-                    gestureHandler.updateSelectionHandle(
-                        isStart    = true,
-                        x          = dragPositionStart.x,
-                        y          = dragPositionStart.y,
-                        viewWidth  = overlaySize.width,
-                        viewHeight = overlaySize.height
-                    )
-                },
-                onDragEnd = {
-                    val s = interactiveState.selectionStartChar
-                    val e = interactiveState.selectionEndChar
-                    if (s != null && e != null && compareChars(s, e) > 0) {
-                        interactiveState.updateSelectionStart(e)
-                        interactiveState.updateSelectionEnd(s)
+        val isDragging = interactiveState.isDraggingHandle
+        val draggingIsStart = interactiveState.draggingHandleIsStart
+
+        // START HANDLE:
+        // - Gesture handler: this page overlay if draggingHandle == HandleType.START
+        // - Selection start page: this page overlay if showStartHandle == true
+        val isStartGestureHandler = (draggingHandle == HandleType.START)
+        val shouldRenderStart = showStartHandle || isStartGestureHandler
+
+        if (shouldRenderStart) {
+            val handlePos = if (isStartGestureHandler && !showStartHandle) dragPositionStart else snappedStart
+            if (handlePos != Offset.Zero) {
+                SelectionHandleTeardrop(
+                    isStart = true,
+                    position = handlePos,
+                    touchSize = touchTargetDp / scaleFactor,
+                    visualSize = visualHandleSize / scaleFactor,
+                    isVisible = showStartHandle,
+                    isTouchEnabled = isStartGestureHandler || (!isDragging && showStartHandle),
+                    onDragStart = {
+                        interactiveState.isDraggingHandle = true
+                        interactiveState.draggingHandleIsStart = true
+                        draggingHandle = HandleType.START
+                        gestureHandler.notifyHandleDragStarted()
+                        dragPositionStart = snappedStart
+                    },
+                    onDragDelta = { delta ->
+                        dragPositionStart += delta
+                        gestureHandler.updateSelectionHandle(
+                            isStart    = true,
+                            x          = dragPositionStart.x,
+                            y          = dragPositionStart.y,
+                            viewWidth  = overlaySize.width,
+                            viewHeight = overlaySize.height,
+                            sourcePage = pageIndex
+                        )
+                    },
+                    onDragEnd = {
+                        interactiveState.isDraggingHandle = false
+                        interactiveState.draggingHandleIsStart = null
+                        draggingHandle = HandleType.NONE
+                        gestureHandler.notifyHandleDragEnded()
                     }
-                    interactiveState.isDraggingHandle = false
-                    draggingHandle = HandleType.NONE
-                    gestureHandler.notifyHandleDragEnded()
-                }
-            )
+                )
+            }
         }
 
-        if (snappedEnd != Offset.Zero) {
-            SelectionHandleTeardrop(
-                isStart = false,
-                position = snappedEnd,
-                touchSize = touchTargetDp / scaleFactor,
-                visualSize = visualHandleSize / scaleFactor,
-                onDragStart = {
-                    interactiveState.isDraggingHandle = true
-                    draggingHandle = HandleType.END
-                    gestureHandler.notifyHandleDragStarted()
-                    dragPositionEnd = snappedEnd
-                },
-                onDragDelta = { delta ->
-                    // positionChange() already accounts for ancestor graphicsLayer
-                    // transforms — no need to divide by scaleFactor.
-                    dragPositionEnd += delta
-                    gestureHandler.updateSelectionHandle(
-                        isStart    = false,
-                        x          = dragPositionEnd.x,
-                        y          = dragPositionEnd.y,
-                        viewWidth  = overlaySize.width,
-                        viewHeight = overlaySize.height
-                    )
-                },
-                onDragEnd = {
-                    val s = interactiveState.selectionStartChar
-                    val e = interactiveState.selectionEndChar
-                    if (s != null && e != null && compareChars(s, e) > 0) {
-                        interactiveState.updateSelectionStart(e)
-                        interactiveState.updateSelectionEnd(s)
+        // END HANDLE:
+        // - Gesture handler: this page overlay if draggingHandle == HandleType.END
+        // - Selection end page: this page overlay if showEndHandle == true
+        val isEndGestureHandler = (draggingHandle == HandleType.END)
+        val shouldRenderEnd = showEndHandle || isEndGestureHandler
+
+        if (shouldRenderEnd) {
+            val handlePos = if (isEndGestureHandler && !showEndHandle) dragPositionEnd else snappedEnd
+            if (handlePos != Offset.Zero) {
+                SelectionHandleTeardrop(
+                    isStart = false,
+                    position = handlePos,
+                    touchSize = touchTargetDp / scaleFactor,
+                    visualSize = visualHandleSize / scaleFactor,
+                    isVisible = showEndHandle,
+                    isTouchEnabled = isEndGestureHandler || (!isDragging && showEndHandle),
+                    onDragStart = {
+                        interactiveState.isDraggingHandle = true
+                        interactiveState.draggingHandleIsStart = false
+                        draggingHandle = HandleType.END
+                        gestureHandler.notifyHandleDragStarted()
+                        dragPositionEnd = snappedEnd
+                    },
+                    onDragDelta = { delta ->
+                        dragPositionEnd += delta
+                        gestureHandler.updateSelectionHandle(
+                            isStart    = false,
+                            x          = dragPositionEnd.x,
+                            y          = dragPositionEnd.y,
+                            viewWidth  = overlaySize.width,
+                            viewHeight = overlaySize.height,
+                            sourcePage = pageIndex
+                        )
+                    },
+                    onDragEnd = {
+                        interactiveState.isDraggingHandle = false
+                        interactiveState.draggingHandleIsStart = null
+                        draggingHandle = HandleType.NONE
+                        gestureHandler.notifyHandleDragEnded()
                     }
-                    interactiveState.isDraggingHandle = false
-                    draggingHandle = HandleType.NONE
-                    gestureHandler.notifyHandleDragEnded()
-                }
-            )
+                )
+            }
         }
 
         // ── Magnifier ───────────────────────────────────────────────────────
-        // Magnifier: only shown at zoom level 1x. When the user has zoomed in the content is
-        // already magnified, so the lens would add no value and may feel redundant/confusing.
-        val magnifierVisible = draggingHandle != HandleType.NONE && scaleFactor <= 1f
-        val magnifierAnchor = when (draggingHandle) {
-            HandleType.START -> snappedStart
-            HandleType.END   -> snappedEnd
-            HandleType.NONE  -> {
-                // Hold last known position during the collapse animation
-                if (snappedStart != Offset.Zero) snappedStart else snappedEnd
-            }
-        }
+        // Magnifier shows on the active handle's current page (showStartHandle / showEndHandle)
+        val isMagnifierForThisPage = if (isDragging) {
+            if (draggingIsStart == true) showStartHandle
+            else showEndHandle
+        } else false
+
+        val magnifierVisible = isMagnifierForThisPage && scaleFactor <= 1f
+        val magnifierAnchor = if (draggingIsStart == true) snappedStart else snappedEnd
 
         SelectionMagnifier(
             isVisible      = magnifierVisible,
@@ -321,82 +328,90 @@ private fun SelectionHandleTeardrop(
     position: Offset,
     touchSize: androidx.compose.ui.unit.Dp,
     visualSize: androidx.compose.ui.unit.Dp,
-    onDragStart: () -> Unit,
-    onDragDelta: (Offset) -> Unit,
-    onDragEnd: () -> Unit
+    isVisible: Boolean = true,
+    isTouchEnabled: Boolean = true,
+    onDragStart: () -> Unit = {},
+    onDragDelta: (Offset) -> Unit = {},
+    onDragEnd: () -> Unit = {}
 ) {
     val density = LocalDensity.current
     val touchRadiusPx = with(density) { (touchSize / 2).toPx() }
     val visualSizePx  = with(density) { visualSize.toPx() }
     val handleColor   = LocalPdfViewerColors.current.selectionHandle
 
-    Box(
-        modifier = Modifier
-            .offset {
-                IntOffset(
-                    x = (position.x - touchRadiusPx).toInt(),
-                    y = (position.y - touchRadiusPx).toInt()
-                )
-            }
-            .size(touchSize)
-            // Unified gesture: claims the touch immediately then tracks drag deltas.
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    down.consume()   // Claim touch to block parent gestures
-                    onDragStart()
+    var boxModifier = Modifier
+        .offset {
+            IntOffset(
+                x = (position.x - touchRadiusPx).toInt(),
+                y = (position.y - touchRadiusPx).toInt()
+            )
+        }
+        .size(touchSize)
 
-                    try {
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            if (event.changes.all { !it.pressed }) break
-                            event.changes.forEach { change ->
-                                if (change.positionChanged()) {
-                                    onDragDelta(change.positionChange())
-                                    change.consume()
-                                }
+    if (isTouchEnabled) {
+        boxModifier = boxModifier.pointerInput(Unit) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                down.consume()   // Claim touch to block parent gestures
+                onDragStart()
+
+                try {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        if (event.changes.all { !it.pressed }) break
+                        event.changes.forEach { change ->
+                            if (change.positionChanged()) {
+                                onDragDelta(change.positionChange())
+                                change.consume()
                             }
                         }
-                    } finally {
-                        onDragEnd()
                     }
+                } finally {
+                    onDragEnd()
                 }
-            },
+            }
+        }
+    }
+
+    Box(
+        modifier = boxModifier,
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = Modifier.size(visualSize)) {
-            val cx = size.width  / 2
-            val cy = size.height / 2
-            val radius = visualSizePx / 2f
+        if (isVisible) {
+            Canvas(modifier = Modifier.size(visualSize)) {
+                val cx = size.width  / 2
+                val cy = size.height / 2
+                val radius = visualSizePx / 2f
 
-            if (isStart) {
-                // Left handle: circle bottom-left + triangle
-                drawCircle(
-                    color  = handleColor,
-                    radius = radius,
-                    center = Offset(cx - radius, cy + radius)
-                )
-                val tri = Path().apply {
-                    moveTo(cx, cy)
-                    lineTo(cx - radius, cy)
-                    lineTo(cx, cy + radius)
-                    close()
+                if (isStart) {
+                    // Left handle: circle bottom-left + triangle
+                    drawCircle(
+                        color  = handleColor,
+                        radius = radius,
+                        center = Offset(cx - radius, cy + radius)
+                    )
+                    val tri = Path().apply {
+                        moveTo(cx, cy)
+                        lineTo(cx - radius, cy)
+                        lineTo(cx, cy + radius)
+                        close()
+                    }
+                    drawPath(tri, color = handleColor)
+                } else {
+                    // Right handle: circle bottom-right + triangle
+                    drawCircle(
+                        color  = handleColor,
+                        radius = radius,
+                        center = Offset(cx + radius, cy + radius)
+                    )
+                    val tri = Path().apply {
+                        moveTo(cx, cy)
+                        lineTo(cx + radius, cy)
+                        lineTo(cx, cy + radius)
+                        close()
+                    }
+                    drawPath(tri, color = handleColor)
                 }
-                drawPath(tri, color = handleColor)
-            } else {
-                // Right handle: circle bottom-right + triangle
-                drawCircle(
-                    color  = handleColor,
-                    radius = radius,
-                    center = Offset(cx + radius, cy + radius)
-                )
-                val tri = Path().apply {
-                    moveTo(cx, cy)
-                    lineTo(cx + radius, cy)
-                    lineTo(cx, cy + radius)
-                    close()
-                }
-                drawPath(tri, color = handleColor)
             }
         }
     }

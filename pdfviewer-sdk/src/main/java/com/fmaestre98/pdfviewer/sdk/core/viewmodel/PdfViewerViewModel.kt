@@ -77,8 +77,6 @@ internal class PdfViewerViewModel : ViewModel() {
                 interactiveState.selectTextByQuery(pendingQuery, pageIndex)
                 interactiveState.pendingSearchQuery = null
                 interactiveState.pendingSearchPage = -1
-            } else {
-                interactiveState.deactivateTextSelection()
             }
         }
     }
@@ -92,13 +90,6 @@ internal class PdfViewerViewModel : ViewModel() {
         verticalView: Boolean = false
     ) {
         println("my-logs called setCurrentPage pageIndex=$pageIndex optimalSize=$optimalSize")
-        // Deactivate text selection if page changes
-        if (navigationState.currentPageIndex != pageIndex && interactiveState.isTextSelectionActive) {
-            // Only deactivate if selection is on a different page
-            if (interactiveState.selectionPageIndex != pageIndex) {
-                interactiveState.deactivateTextSelection()
-            }
-        }
         
         // Stop TTS if active when changing pages
         if (interactiveState.isKaraokeMode && navigationState.currentPageIndex != pageIndex) {

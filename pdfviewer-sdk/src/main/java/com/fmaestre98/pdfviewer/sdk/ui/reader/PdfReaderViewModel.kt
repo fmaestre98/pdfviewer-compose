@@ -152,17 +152,20 @@ internal class PdfReaderViewModel(
                 }
             }
             is PdfReaderAction.SaveHighlight -> {
-                if (action.normalizedRects.isEmpty()) return
+                val pagesWithRects = action.rectsByPage.filterValues { it.isNotEmpty() }
+                if (pagesWithRects.isEmpty()) return
                 val groupId = UUID.randomUUID().toString()
                 viewModelScope.launch {
-                    storage.saveHighlight(
-                        documentId = documentId,
-                        page = action.page,
-                        snippet = action.snippet,
-                        color = action.color,
-                        groupId = groupId,
-                        rects = action.normalizedRects
-                    )
+                    pagesWithRects.forEach { (page, rects) ->
+                        storage.saveHighlight(
+                            documentId = documentId,
+                            page = page,
+                            snippet = action.snippet,
+                            color = action.color,
+                            groupId = groupId,
+                            rects = rects
+                        )
+                    }
                     val highlightsMap = storage.getHighlightsByPage(documentId)
                     _state.update { it.copy(highlights = highlightsMap) }
                 }

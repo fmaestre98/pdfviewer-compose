@@ -192,10 +192,13 @@ internal fun HorizontalPdfView(
                     // Replace previous selection with new one (per user preference)
                     interactiveState.activateTextSelection(word, navigationState.currentPageIndex)
                     onWordSelected?.invoke(word)
+                } else if (interactiveState.isTextSelectionActive) {
+                    interactiveState.deactivateTextSelection()
+                    onSelectionCleared?.invoke()
                 }
             }
 
-            override fun onSelectionHandleDragged(isStart: Boolean, x: Float, y: Float, viewWidth: Int, viewHeight: Int) {
+            override fun onSelectionHandleDragged(isStart: Boolean, x: Float, y: Float, viewWidth: Int, viewHeight: Int, sourcePage: Int) {
                 val pageModel =  interactiveState.getPageModel(navigationState.currentPageIndex) ?: return
                 interactiveState.isDraggingHandle = true // Ocultar menú
 

@@ -15,9 +15,8 @@ internal sealed interface PdfReaderAction {
     data object DeletePageNote : PdfReaderAction
     data class SaveHighlight(
         val color: String,
-        val page: Int,
         val snippet: String,
-        val normalizedRects: List<NormalizedRect>
+        val rectsByPage: Map<Int, List<NormalizedRect>>
     ) : PdfReaderAction
     data object ToggleSearch : PdfReaderAction
     data object CloseSearch : PdfReaderAction
