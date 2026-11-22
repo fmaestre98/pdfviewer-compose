@@ -46,6 +46,8 @@ dependencies {
     api(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     api(libs.androidx.compose.material3)
+    // Material3 >= 1.4 no longer brings the icons transitively.
+    implementation(libs.androidx.compose.material.icons.core)
 
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

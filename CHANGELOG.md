@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-22
+
+### Fixed
+
+- Crash (`ClassNotFoundException: androidx.compose.material.icons.Icons`) when opening a document in apps that use Compose BOM 2025.x or newer. The SDK now declares `material-icons-core` explicitly instead of relying on Material 3 to bring it transitively.
+
 ## [1.0.0] - 2026-11-22
 
 ### Added
@@ -19,5 +25,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Optional per-document `AnnotationsScreen` and `AnnotationsViewModel`.
 - Sample app with a minimal integration and a full bookshelf app using Hilt and a custom storage.
 
-[Unreleased]: https://github.com/fmaestre98/pdfviewer-compose/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/fmaestre98/pdfviewer-compose/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/fmaestre98/pdfviewer-compose/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/fmaestre98/pdfviewer-compose/releases/tag/v1.0.0
