@@ -5,6 +5,10 @@ plugins {
     alias(libs.plugins.maven.publish)
 }
 
+// AGP 9 only registers this task on the root project, but Android Studio requests it on every
+// module while syncing. An empty task keeps the sync from failing.
+tasks.register("prepareKotlinBuildScriptModel")
+
 android {
     namespace = "com.fmaestre98.pdfviewer.sdk"
     compileSdk {
