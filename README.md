@@ -264,12 +264,7 @@ cd pdfviewer-compose
 ./gradlew :pdfviewer-sdk:publishToMavenLocal  # try the artifact in another local project via mavenLocal()
 ```
 
----
 
-
-4.  Create a GitHub release from the tag with the changelog notes. The artifact usually appears on Maven Central within 30 minutes.
-
----
 
 ## License
 
