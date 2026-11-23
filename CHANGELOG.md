@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-23
+
+### Fixed
+
+- The page index no longer opens by itself when rotating the screen. The thumbnail panel is now shown only while it is actually open, instead of using `ModalNavigationDrawer`, which snapped open on a configuration change.
+
 ## [1.0.1] - 2026-11-22
 
 ### Fixed
@@ -25,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Optional per-document `AnnotationsScreen` and `AnnotationsViewModel`.
 - Sample app with a minimal integration and a full bookshelf app using Hilt and a custom storage.
 
-[Unreleased]: https://github.com/fmaestre98/pdfviewer-compose/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/fmaestre98/pdfviewer-compose/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/fmaestre98/pdfviewer-compose/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/fmaestre98/pdfviewer-compose/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/fmaestre98/pdfviewer-compose/releases/tag/v1.0.0

@@ -57,7 +57,7 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("io.github.fmaestre98:pdfviewer-compose:1.0.1")
+    implementation("io.github.fmaestre98:pdfviewer-compose:1.0.2")
 }
 ```
 
